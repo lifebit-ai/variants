@@ -6,7 +6,7 @@ processAInput = Channel.from([1] * numberRepetitionsForProcessA)
 processAS3InputFiles = Channel.fromPath("${params.s3Location}/*${params.fileSuffix}").take( numberRepetitionsForProcessA )
 
 process processA {
-	publishDir "${params.output}/${task.hash}", mode: 'copy'
+	publishDir "${params.output}/MultiQC", mode: 'copy'
   	tag "$s3_file"
 
 	input:
@@ -17,18 +17,11 @@ process processA {
 	val x into processAOutput
 	val x into processCInput
 	val x into processDInput
-	file "*.txt"
+	file("multiqc_report.html")
 
 	script:
 	"""
-	# Simulate the time the processes takes to finish
-	timeToWait=\$(shuf -i ${params.processATimeRange} -n 1)
-	for i in {1..${numberFilesForProcessA}};
-	do echo test > file_\${i}.txt
-	sleep ${params.processATimeBetweenFileCreationInSecs}
-	done;
-	sleep \$timeToWait
-	echo "task cpus: ${task.cpus}"
+	mv $s3_file multiqc_report.html 
 	"""
 }
 
